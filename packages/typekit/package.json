@@ -1,0 +1,46 @@
+{
+  "name": "typekit",
+  "version": "0.0.0",
+  "description": "Typescript toolkit",
+  "homepage": "https://github.com/pekochan069/typekit#readme",
+  "bugs": {
+    "url": "https://github.com/pekochan069/typekit/issues"
+  },
+  "license": "MIT",
+  "author": "pekochan069 <pekochan069@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pekochan069/typekit.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./option": "./dist/option/index.mjs",
+    "./result": "./dist/result/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "bun test",
+    "prepublishOnly": "bun run build",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.9",
+    "@types/node": "^25.0.3",
+    "bumpp": "^10.3.2",
+    "bun-types": "^1.3.9",
+    "lefthook": "^2.1.1",
+    "tsdown": "^0.20.3",
+    "typescript": "^6.0.0-beta"
+  }
+}

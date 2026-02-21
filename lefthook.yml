@@ -1,0 +1,21 @@
+pre-commit:
+  parallel: true
+
+  jobs:
+    - name: format
+      run: bun run oxfmt {staged_files}
+      glob: "*.{js,ts,jsx,tsx,json,jsonc,json5,yaml,yml,toml,html,md,mdx}"
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+
+  jobs:
+    - name: lint
+      run: bun run lint
+
+    - name: check-types
+      run: bun run check-types
+
+    - name: test
+      run: bun run test
