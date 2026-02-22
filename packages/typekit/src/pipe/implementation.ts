@@ -1967,6 +1967,14 @@ const pipeableObject = {
   },
 };
 
-export function pipeable<T>(object: Record<string, unknown>): T {
-  return Object.assign(Object.create(pipeableObject), object);
+type PipeableObject = {
+  pipe: typeof pipeableObject.pipe;
+};
+
+export function pipeable<WithoutPipe extends object>(
+  object: WithoutPipe & {
+    pipe?: never;
+  },
+): WithoutPipe & PipeableObject {
+  return Object.assign<WithoutPipe & PipeableObject, WithoutPipe>(Object.create(pipeableObject), object);
 }
