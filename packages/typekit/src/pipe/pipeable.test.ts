@@ -30,7 +30,7 @@ describe("Pipeable", () => {
 
     const add = (object: PipeableObject) => createObject(object.value + 1);
 
-    const object = Pipe.pipeable<PipeableObject>({ value: 1 });
+    const object = createObject(1);
 
     const value = object.pipe(add);
 
