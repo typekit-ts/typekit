@@ -11,7 +11,7 @@ export const tagged: {
   return Object.defineProperty(object, "_tag", {
     value: tag,
     writable: false,
-    enumerable: false,
+    enumerable: true,
     configurable: false,
   }) as T & Tagged<Tag>;
 });
