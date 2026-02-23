@@ -83,8 +83,12 @@ export const expect: {
   return result.value;
 });
 
-export function flatten<T, E>(result: Result<Result<T, E>, E>): Result<T, E> {
-  return result._tag === "ok" ? result.value : result;
+export function flatten<T, E1, E2 = E1>(result: Result<Result<T, E1>, E2>): Result<T, E1 | E2> {
+  if (result._tag === "err") {
+    return err(result.error);
+  }
+
+  return result.value._tag === "ok" ? ok(result.value.value) : err(result.value.error);
 }
 
 export const map: {
