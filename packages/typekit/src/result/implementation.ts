@@ -1,29 +1,37 @@
 import { dual } from "~/dual";
 import { pipeable, type Pipeable } from "~/pipe/implementation";
-import type { Tagged } from "~/tagged/implementation";
+import { tagged, type Tagged } from "~/tagged";
 
-export interface Ok<T> extends Tagged<"ok">, Pipeable {
+export interface Ok<T> extends Tagged.Tagged<"ok">, Pipeable {
   value: T;
 }
 
-export interface Err<E> extends Tagged<"err">, Pipeable {
+export interface Err<E> extends Tagged.Tagged<"err">, Pipeable {
   error: E;
 }
 
 export type Result<T, E> = Ok<T> | Err<E>;
 
 export function ok<T = unknown, E = never>(value: T): Result<T, E> {
-  return pipeable({
-    _tag: "ok",
-    value,
-  });
+  return pipeable(
+    tagged(
+      {
+        value,
+      },
+      "ok",
+    ),
+  );
 }
 
 export function err<T = never, E = unknown>(error: E): Result<T, E> {
-  return pipeable({
-    _tag: "err",
-    error,
-  });
+  return pipeable(
+    tagged(
+      {
+        error,
+      },
+      "err",
+    ),
+  );
 }
 
 export function isOk<T, E>(result: Result<T, E>): result is Ok<T> {
