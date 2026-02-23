@@ -44,7 +44,7 @@ export function isErr<T, E>(result: Result<T, E>): result is Err<E> {
 
 export function unwrap<T, E>(result: Result<T, E>) {
   if (result._tag === "err") {
-    throw new Error(`Cannot unwrap Err value: ${result}`);
+    throw new Error(`Cannot unwrap Err value: ${String(result.error)}`);
   }
 
   return result.value;
@@ -59,7 +59,7 @@ export const unwrapOr: {
 
 export function unwrapErr<T, E>(result: Result<T, E>) {
   if (result._tag === "ok") {
-    throw new Error(`Cannot unwrapErr Ok value: ${result}`);
+    throw new Error(`Cannot unwrapErr Ok value: ${String(result.value)}`);
   }
 
   return result.error;
