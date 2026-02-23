@@ -1,13 +1,12 @@
 import { dual } from "~/dual";
 import { pipeable, type Pipeable } from "~/pipe/implementation";
+import type { Tagged } from "~/tagged/implementation";
 
-export interface Ok<T> extends Pipeable {
-  _tag: "ok";
+export interface Ok<T> extends Tagged<"ok">, Pipeable {
   value: T;
 }
 
-export interface Err<E> extends Pipeable {
-  _tag: "err";
+export interface Err<E> extends Tagged<"err">, Pipeable {
   error: E;
 }
 
