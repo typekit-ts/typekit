@@ -341,4 +341,23 @@ describe("result", () => {
       expect(mappedErr.error).toBe("error!");
     }
   });
+
+  test("match() - data first", () => {
+    const okValue = Result.ok<number, string>(1);
+    const errValue = Result.err<number, string>("error");
+
+    const matchedOk = Result.match(okValue, {
+      onOk: (value) => value,
+      onErr: () => 2,
+    });
+
+    expect(matchedOk).toBe(1);
+
+    const matchedErr = Result.match(errValue, {
+      onOk: (value) => value,
+      onErr: () => 2,
+    });
+
+    expect(matchedErr).toBe(2);
+  });
 });

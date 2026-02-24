@@ -168,3 +168,25 @@ export const biFlatMap: {
     return result._tag === "ok" ? func.onOk(result.value) : func.onErr(result.error);
   },
 );
+
+export const match: {
+  <T, E, R1, R2 = never>(
+    result: Result<T, E>,
+    func: {
+      onOk: (value: T) => R1;
+      onErr: (error: E) => R2;
+    },
+  ): R1 | R2;
+  <T, E, R1, R2 = never>(func: { onOk: (value: T) => R1; onErr: (error: E) => R2 }): (result: Result<T, E>) => R1 | R2;
+} = dual(
+  2,
+  function <T, E, R1, R2 = never>(
+    result: Result<T, E>,
+    func: {
+      onOk: (value: T) => R1;
+      onErr: (error: E) => R2;
+    },
+  ): R1 | R2 {
+    return result._tag === "ok" ? func.onOk(result.value) : func.onErr(result.error);
+  },
+);
