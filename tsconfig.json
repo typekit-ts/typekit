@@ -15,5 +15,6 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["./scripts", "./node_modules/@types"]
 }
