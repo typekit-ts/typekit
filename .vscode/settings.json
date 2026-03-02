@@ -11,5 +11,6 @@
   },
   "[yaml]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
-  }
+  },
+  "oxc.enable.oxlint": true
 }
