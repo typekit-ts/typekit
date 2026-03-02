@@ -1,6 +1,8 @@
 import { dual } from "~/dual";
+import type { HKT } from "~/hkt";
 import { type Pipeable, pipeable } from "~/pipe/implementation";
 import { Tagged, tagged } from "~/tagged";
+import type { TypeClass } from "~/typeclass";
 
 export interface Ok<T> extends Tagged.Tagged<"ok">, Pipeable {
   value: T;
@@ -33,6 +35,27 @@ export function err<T = never, E = unknown>(error: E): Result<T, E> {
     ),
   );
 }
+
+interface ResultHKT extends HKT.HKT2 {
+  return: Result<HKT.Arg0<this>, HKT.Arg1<this>>;
+}
+
+const resultMonad: TypeClass.Monad2<ResultHKT> = {
+  pureLeft: (value) => pipeable(tagged({ value }, "ok")),
+  pureRight: (error) => pipeable(tagged({ error }, "err")),
+  mapLeft: (result, onOk) => (result._tag === "ok" ? resultMonad.pureLeft(onOk(result.value)) : result),
+  mapRight: (result, onErr) => (result._tag === "ok" ? result : resultMonad.pureRight(onErr(result.error))),
+  biMap: (result, func) =>
+    result._tag === "ok"
+      ? resultMonad.pureLeft(func.onLeft(result.value))
+      : resultMonad.pureRight(func.onRight(result.error)),
+  apLeft: (result, onOk) => (result._tag === "ok" ? onOk(result) : result),
+  apRight: (result, onErr) => (result._tag === "ok" ? result : onErr(result)),
+  biAp: (result, func) => (result._tag === "ok" ? func.onLeft(result) : func.onRight(result)),
+  flatMapLeft: (result, onOk) => (result._tag === "ok" ? onOk(result.value) : result),
+  flatMapRight: (result, onErr) => (result._tag === "ok" ? result : onErr(result.error)),
+  biFlatMap: (result, func) => (result._tag === "ok" ? func.onLeft(result.value) : func.onRight(result.error)),
+};
 
 export function isOk<T, E>(result: Result<T, E>): result is Ok<T> {
   return result._tag === "ok";
@@ -94,16 +117,12 @@ export function flatten<T, E1, E2 = E1>(result: Result<Result<T, E1>, E2>): Resu
 export const map: {
   <T1, E, T2>(result: Result<T1, E>, onOk: (value: T1) => T2): Result<T2, E>;
   <T1, T2>(onOk: (value: T1) => T2): <E>(result: Result<T1, E>) => Result<T2, E>;
-} = dual(2, function <T1, E, T2>(result: Result<T1, E>, onOk: (value: T1) => T2): Result<T2, E> {
-  return result._tag === "ok" ? ok(onOk(result.value)) : result;
-});
+} = dual(2, resultMonad.mapLeft);
 
 export const mapErr: {
   <T, E1, E2>(result: Result<T, E1>, onErr: (error: E1) => E2): Result<T, E2>;
   <E1, E2>(onErr: (error: E1) => E2): <T>(result: Result<T, E1>) => Result<T, E2>;
-} = dual(2, function <T, E1, E2>(result: Result<T, E1>, onErr: (error: E1) => E2): Result<T, E2> {
-  return result._tag === "ok" ? result : err(onErr(result.error));
-});
+} = dual(2, resultMonad.mapRight);
 
 export const biMap: {
   <T1, E1, T2, E2>(
@@ -125,24 +144,58 @@ export const biMap: {
       onOk: (value: T1) => T2;
       onErr: (error: E1) => E2;
     },
+  ) {
+    return resultMonad.biMap(result, { onLeft: func.onOk, onRight: func.onErr });
+  },
+);
+
+export const ap: {
+  <T1, E, T2>(result: Result<T1, E>, onOk: (result: Result<T1, E>) => Result<T2, E>): Result<T2, E>;
+  <T1, E, T2>(onOk: (result: Result<T1, E>) => Result<T2, E>): (result: Result<T1, E>) => Result<T2, E>;
+} = dual(2, resultMonad.apLeft);
+
+export const apErr: {
+  <T, E1, E2>(result: Result<T, E1>, onErr: (result: Result<T, E1>) => Result<T, E2>): Result<T, E2>;
+  <T, E1, E2>(onErr: (result: Result<T, E1>) => Result<T, E2>): (result: Result<T, E1>) => Result<T, E2>;
+} = dual(2, resultMonad.apRight);
+
+export const biAp: {
+  <T1, E1, T2, E2>(
+    result: Result<T1, E1>,
+    func: {
+      onOk: (result: Result<T1, E1>) => Result<T2, E2>;
+      onErr: (result: Result<T1, E1>) => Result<T2, E2>;
+    },
+  ): Result<T2, E2>;
+  <T1, E1, T2, E2>(func: {
+    onOk: (result: Result<T1, E1>) => Result<T2, E2>;
+    onErr: (result: Result<T1, E1>) => Result<T2, E2>;
+  }): (result: Result<T1, E1>) => Result<T2, E2>;
+} = dual(
+  2,
+  function <T1, E1, T2, E2>(
+    result: Result<T1, E1>,
+    func: {
+      onOk: (result: Result<T1, E1>) => Result<T2, E2>;
+      onErr: (result: Result<T1, E1>) => Result<T2, E2>;
+    },
   ): Result<T2, E2> {
-    return result._tag === "ok" ? ok(func.onOk(result.value)) : err(func.onErr(result.error));
+    return resultMonad.biAp(result, {
+      onLeft: func.onOk,
+      onRight: func.onErr,
+    });
   },
 );
 
 export const flatMap: {
   <T1, E, T2>(result: Result<T1, E>, onOk: (value: T1) => Result<T2, E>): Result<T2, E>;
   <T1, E, T2>(onOk: (value: T1) => Result<T2, E>): (result: Result<T1, E>) => Result<T2, E>;
-} = dual(2, function <T1, E, T2>(result: Result<T1, E>, onOk: (value: T1) => Result<T2, E>): Result<T2, E> {
-  return result._tag === "ok" ? onOk(result.value) : result;
-});
+} = dual(2, resultMonad.flatMapLeft);
 
 export const flatMapErr: {
   <T, E1, E2>(result: Result<T, E1>, onErr: (error: E1) => Result<T, E2>): Result<T, E2>;
   <T, E1, E2>(onErr: (error: E1) => Result<T, E2>): (result: Result<T, E1>) => Result<T, E2>;
-} = dual(2, function <T, E1, E2>(result: Result<T, E1>, onErr: (error: E1) => Result<T, E2>): Result<T, E2> {
-  return result._tag === "ok" ? result : onErr(result.error);
-});
+} = dual(2, resultMonad.flatMapRight);
 
 export const biFlatMap: {
   <T1, E1, T2, E2>(
@@ -165,7 +218,7 @@ export const biFlatMap: {
       onErr: (error: E1) => Result<T2, E2>;
     },
   ) {
-    return result._tag === "ok" ? func.onOk(result.value) : func.onErr(result.error);
+    return resultMonad.biFlatMap(result, { onLeft: func.onOk, onRight: func.onErr });
   },
 );
 
