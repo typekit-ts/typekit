@@ -234,6 +234,124 @@ describe("result", () => {
     }
   });
 
+  test("ap() - data first", () => {
+    const okValue: Result.Result<number, string> = Result.ok(2);
+    const errValue: Result.Result<number, string> = Result.err("error");
+
+    const apFn = (result: Result.Result<number, string>) =>
+      Result.isOk(result) ? Result.ok<number, string>(result.value * 2) : Result.err<number, string>("unexpected");
+
+    const mappedOk = Result.ap(okValue, apFn);
+    const mappedErr = Result.ap(errValue, apFn);
+
+    expect(mappedOk._tag).toBe("ok");
+    if (Result.isOk(mappedOk)) {
+      expect(mappedOk.value).toBe(4);
+    }
+    expect(mappedErr).toBe(errValue);
+  });
+
+  test("ap() - data last", () => {
+    const okValue: Result.Result<number, string> = Result.ok(2);
+    const errValue: Result.Result<number, string> = Result.err("error");
+
+    const apFn = Result.ap((result: Result.Result<number, string>) =>
+      Result.isOk(result) ? Result.ok<number, string>(result.value * 2) : Result.err<number, string>("unexpected"),
+    );
+
+    const mappedOk = apFn(okValue);
+    const mappedErr = apFn(errValue);
+
+    expect(mappedOk._tag).toBe("ok");
+    if (Result.isOk(mappedOk)) {
+      expect(mappedOk.value).toBe(4);
+    }
+    expect(mappedErr).toBe(errValue);
+  });
+
+  test("apErr() - data first", () => {
+    const okValue: Result.Result<number, string> = Result.ok(2);
+    const errValue: Result.Result<number, string> = Result.err("error");
+
+    const apErrFn = (result: Result.Result<number, string>) =>
+      Result.isErr(result) ? Result.err<number, string>(`${result.error}!`) : Result.ok<number, string>(0);
+
+    const mappedOk = Result.apErr(okValue, apErrFn);
+    const mappedErr = Result.apErr(errValue, apErrFn);
+
+    expect(mappedOk).toBe(okValue);
+    expect(mappedErr._tag).toBe("err");
+    if (Result.isErr(mappedErr)) {
+      expect(mappedErr.error).toBe("error!");
+    }
+  });
+
+  test("apErr() - data last", () => {
+    const okValue: Result.Result<number, string> = Result.ok(2);
+    const errValue: Result.Result<number, string> = Result.err("error");
+
+    const apErrFn = Result.apErr((result: Result.Result<number, string>) =>
+      Result.isErr(result) ? Result.err<number, string>(`${result.error}!`) : Result.ok<number, string>(0),
+    );
+
+    const mappedOk = apErrFn(okValue);
+    const mappedErr = apErrFn(errValue);
+
+    expect(mappedOk).toBe(okValue);
+    expect(mappedErr._tag).toBe("err");
+    if (Result.isErr(mappedErr)) {
+      expect(mappedErr.error).toBe("error!");
+    }
+  });
+
+  test("biAp() - data first", () => {
+    const okValue: Result.Result<number, string> = Result.ok(2);
+    const errValue: Result.Result<number, string> = Result.err("error");
+
+    const biApFn = {
+      onOk: (result: Result.Result<number, string>) =>
+        Result.isOk(result) ? Result.ok<number, string>(result.value * 2) : Result.err<number, string>("unexpected"),
+      onErr: (result: Result.Result<number, string>) =>
+        Result.isErr(result) ? Result.err<number, string>(`${result.error}!`) : Result.ok<number, string>(0),
+    };
+
+    const mappedOk = Result.biAp(okValue, biApFn);
+    const mappedErr = Result.biAp(errValue, biApFn);
+
+    expect(mappedOk._tag).toBe("ok");
+    if (Result.isOk(mappedOk)) {
+      expect(mappedOk.value).toBe(4);
+    }
+    expect(mappedErr._tag).toBe("err");
+    if (Result.isErr(mappedErr)) {
+      expect(mappedErr.error).toBe("error!");
+    }
+  });
+
+  test("biAp() - data last", () => {
+    const okValue: Result.Result<number, string> = Result.ok(2);
+    const errValue: Result.Result<number, string> = Result.err("error");
+
+    const biApFn = Result.biAp({
+      onOk: (result: Result.Result<number, string>) =>
+        Result.isOk(result) ? Result.ok<number, string>(result.value * 2) : Result.err<number, string>("unexpected"),
+      onErr: (result: Result.Result<number, string>) =>
+        Result.isErr(result) ? Result.err<number, string>(`${result.error}!`) : Result.ok<number, string>(0),
+    });
+
+    const mappedOk = biApFn(okValue);
+    const mappedErr = biApFn(errValue);
+
+    expect(mappedOk._tag).toBe("ok");
+    if (Result.isOk(mappedOk)) {
+      expect(mappedOk.value).toBe(4);
+    }
+    expect(mappedErr._tag).toBe("err");
+    if (Result.isErr(mappedErr)) {
+      expect(mappedErr.error).toBe("error!");
+    }
+  });
+
   test("flatMap() - data first", () => {
     const okValue: Result.Result<number, string> = Result.ok(2);
     const errValue: Result.Result<number, string> = Result.err("error");
