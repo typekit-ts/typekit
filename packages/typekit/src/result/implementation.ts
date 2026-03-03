@@ -1,6 +1,6 @@
 import { dual } from "~/dual";
 import type { HKT } from "~/hkt";
-import { type Pipeable, pipeable } from "~/pipe/implementation";
+import { type Pipeable, pipeable } from "~/pipe";
 import { Tagged, tagged } from "~/tagged";
 import type { TypeClass } from "~/typeclass";
 
