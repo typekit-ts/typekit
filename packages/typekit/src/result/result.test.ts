@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import { pipe } from "~/pipe";
+
 import { Result } from ".";
 
 describe("result", () => {
@@ -477,6 +479,22 @@ describe("result", () => {
     });
 
     expect(matchedErr).toBe(2);
+  });
+
+  test("pipe()", () => {
+    const result = Result.ok(1);
+
+    const piped = pipe(
+      result,
+      Result.map((v) => v + 1),
+      Result.flatMap((v) => Result.ok(v * 2)),
+      Result.map((v) => v + 1),
+    );
+
+    expect(piped._tag).toBe("ok");
+    if (Result.isOk(piped)) {
+      expect(piped.value).toBe(5);
+    }
   });
 
   test("result.pipe()", () => {

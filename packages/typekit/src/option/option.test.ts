@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import { pipe } from "~/pipe";
+
 import { Option } from ".";
 
 describe("option", () => {
@@ -182,6 +184,22 @@ describe("option", () => {
   });
 
   test("pipe()", () => {
+    const someValue = Option.some(1);
+
+    const piped = pipe(
+      someValue,
+      Option.map((value) => value + 2),
+      Option.flatMap((value) => Option.some(value * 2)),
+      Option.map((value) => value + 1),
+    );
+
+    expect(piped._tag).toBe("some");
+    if (Option.isSome(piped)) {
+      expect(piped.value).toBe(7);
+    }
+  });
+
+  test("option.pipe()", () => {
     const someValue = Option.some(1).pipe(
       Option.map((value) => value + 2),
       Option.flatMap((value) => Option.some(value * 2)),
