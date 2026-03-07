@@ -1,22 +1,25 @@
 import { dual } from "~/dual";
-import type { HKT } from "~/hkt";
-import { type Pipeable, pipeable } from "~/pipe";
-import { Tagged, tagged } from "~/tagged";
-import type { TypeClass } from "~/typeclass";
+import { Functions } from "~/functions";
+import { HKT } from "~/hkt";
+import { Option } from "~/option";
+import { Pipe } from "~/pipe";
+import { Tagged } from "~/tagged";
+import { Type } from "~/type";
+import { TypeClass } from "~/typeclass";
 
-export interface Ok<T> extends Tagged.Tagged<"ok">, Pipeable {
+export interface Ok<T> extends Tagged.Tagged<"ok">, Pipe.Pipeable {
   value: T;
 }
 
-export interface Err<E> extends Tagged.Tagged<"err">, Pipeable {
+export interface Err<E> extends Tagged.Tagged<"err">, Pipe.Pipeable {
   error: E;
 }
 
 export type Result<T, E> = Ok<T> | Err<E>;
 
 export function ok<T = unknown, E = never>(value: T): Result<T, E> {
-  return pipeable(
-    tagged(
+  return Pipe.pipeable(
+    Tagged.tagged(
       {
         value,
       },
@@ -26,8 +29,8 @@ export function ok<T = unknown, E = never>(value: T): Result<T, E> {
 }
 
 export function err<T = never, E = unknown>(error: E): Result<T, E> {
-  return pipeable(
-    tagged(
+  return Pipe.pipeable(
+    Tagged.tagged(
       {
         error,
       },
@@ -41,8 +44,8 @@ interface ResultHKT extends HKT.HKT2 {
 }
 
 const resultMonad: TypeClass.Monad2<ResultHKT> = {
-  pureLeft: (value) => pipeable(tagged({ value }, "ok")),
-  pureRight: (error) => pipeable(tagged({ error }, "err")),
+  pureLeft: (value) => Pipe.pipeable(Tagged.tagged({ value }, "ok")),
+  pureRight: (error) => Pipe.pipeable(Tagged.tagged({ error }, "err")),
   mapLeft: (result, onOk) => (result._tag === "ok" ? resultMonad.pureLeft(onOk(result.value)) : result),
   mapRight: (result, onErr) => (result._tag === "ok" ? result : resultMonad.pureRight(onErr(result.error))),
   biMap: (result, func) =>
@@ -243,3 +246,38 @@ export const match: {
     return result._tag === "ok" ? func.onOk(result.value) : func.onErr(result.error);
   },
 );
+
+export const fromNullable: {
+  <T, E = unknown>(nullable: Type.Nullable<T>, error: E): Result<Type.RemoveNull<T>, E>;
+  <E = unknown>(error: E): <T>(nullable: Type.Nullable<T>) => Result<Type.RemoveNull<T>, E>;
+} = dual(2, function <T, E = unknown>(nullable: Type.Nullable<T>, error: E): Result<Type.RemoveNull<T>, E> {
+  return Functions.isNotNull(nullable) ? ok(nullable) : err(error);
+});
+
+export const fromOptional: {
+  <T, E = unknown>(optional: Type.Optional<T>, error: E): Result<Type.RemoveUndefined<T>, E>;
+  <E = unknown>(error: E): <T>(optional: Type.Optional<T>) => Result<Type.RemoveUndefined<T>, E>;
+} = dual(2, function <T, E = unknown>(optional: Type.Optional<T>, error: E): Result<Type.RemoveUndefined<T>, E> {
+  return Functions.isNotUndefined(optional) ? ok(optional) : err(error);
+});
+
+export const fromNullableOptional: {
+  <T, E = unknown>(nullableOptional: Type.NullableOptional<T>, error: E): Result<Type.RemoveNullOrUndefined<T>, E>;
+  <E = unknown>(error: E): <T>(nullableOptional: Type.NullableOptional<T>) => Result<Type.RemoveNullOrUndefined<T>, E>;
+} = dual(2, function <T, E = unknown>(nullableOptional: Type.NullableOptional<T>, error: E): Result<
+  Type.RemoveNullOrUndefined<T>,
+  E
+> {
+  return Functions.isNotNullOrUndefined(nullableOptional) ? ok(nullableOptional) : err(error);
+});
+
+export function toOption<T, E>(result: Result<T, E>): Option.Option<T> {
+  return result._tag === "ok" ? Option.some(result.value) : Option.none();
+}
+
+export const fromOption: {
+  <T, E = unknown>(option: Option.Option<T>, error: E): Result<T, E>;
+  <E = unknown>(error: E): <T>(option: Option.Option<T>) => Result<T, E>;
+} = dual(2, function <T, E = unknown>(option: Option.Option<T>, error: E): Result<T, E> {
+  return Option.isSome(option) ? ok(option.value) : err(error);
+});

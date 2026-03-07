@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
+import { Option } from "~/option";
 import { pipe } from "~/pipe";
 
 import { Result } from ".";
@@ -507,6 +508,192 @@ describe("result", () => {
     expect(result._tag).toBe("ok");
     if (Result.isOk(result)) {
       expect(result.value).toBe(5);
+    }
+  });
+
+  test("fromNullable() - data first", () => {
+    const value = 1;
+    const nullValue = null;
+    const undefinedValue = undefined;
+
+    const fromValue = Result.fromNullable(value, "error");
+    const fromNull = Result.fromNullable<number | null, string>(nullValue, "error");
+    const fromUndefined = Result.fromNullable<number | undefined, string>(undefinedValue, "error");
+
+    expect(fromValue._tag).toBe("ok");
+    if (Result.isOk(fromValue)) {
+      expect(fromValue.value).toBe(1);
+    }
+    expect(fromNull._tag).toBe("err");
+    if (Result.isErr(fromNull)) {
+      expect(fromNull.error).toBe("error");
+    }
+    expect(fromUndefined._tag).toBe("ok");
+    if (Result.isOk(fromUndefined)) {
+      expect(fromUndefined.value).toBe(undefined);
+    }
+  });
+
+  test("fromNullable() - data last", () => {
+    const value = 1;
+    const nullValue = null;
+    const undefinedValue = undefined;
+
+    const fromValue = Result.fromNullable("error")(value);
+    const fromNull = Result.fromNullable("error")<number | null>(nullValue);
+    const fromUndefined = Result.fromNullable("error")<number | undefined>(undefinedValue);
+
+    expect(fromValue._tag).toBe("ok");
+    if (Result.isOk(fromValue)) {
+      expect(fromValue.value).toBe(1);
+    }
+    expect(fromNull._tag).toBe("err");
+    if (Result.isErr(fromNull)) {
+      expect(fromNull.error).toBe("error");
+    }
+    expect(fromUndefined._tag).toBe("ok");
+    if (Result.isOk(fromUndefined)) {
+      expect(fromUndefined.value).toBe(undefined);
+    }
+  });
+
+  test("fromOptional() - data first", () => {
+    const value = 1;
+    const nullValue = null;
+    const undefinedValue = undefined;
+
+    const fromValue = Result.fromOptional(value, "error");
+    const fromNull = Result.fromOptional<number | null, string>(nullValue, "error");
+    const fromUndefined = Result.fromOptional<number | undefined, string>(undefinedValue, "error");
+
+    expect(fromValue._tag).toBe("ok");
+    if (Result.isOk(fromValue)) {
+      expect(fromValue.value).toBe(1);
+    }
+    expect(fromNull._tag).toBe("ok");
+    if (Result.isOk(fromNull)) {
+      expect(fromNull.value).toBe(null);
+    }
+    expect(fromUndefined._tag).toBe("err");
+    if (Result.isErr(fromUndefined)) {
+      expect(fromUndefined.error).toBe("error");
+    }
+  });
+
+  test("fromOptional() - data last", () => {
+    const value = 1;
+    const nullValue = null;
+    const undefinedValue = undefined;
+
+    const fromValue = Result.fromOptional("error")(value);
+    const fromNull = Result.fromOptional("error")<number | null>(nullValue);
+    const fromUndefined = Result.fromOptional("error")<number | undefined>(undefinedValue);
+
+    expect(fromValue._tag).toBe("ok");
+    if (Result.isOk(fromValue)) {
+      expect(fromValue.value).toBe(1);
+    }
+    expect(fromNull._tag).toBe("ok");
+    if (Result.isOk(fromNull)) {
+      expect(fromNull.value).toBe(null);
+    }
+    expect(fromUndefined._tag).toBe("err");
+    if (Result.isErr(fromUndefined)) {
+      expect(fromUndefined.error).toBe("error");
+    }
+  });
+
+  test("fromNullableOptional() - data first", () => {
+    const value = 1;
+    const nullValue = null;
+    const undefinedValue = undefined;
+
+    const fromValue = Result.fromNullableOptional(value, "error");
+    const fromNull = Result.fromNullableOptional<number | null, string>(nullValue, "error");
+    const fromUndefined = Result.fromNullableOptional<number | undefined, string>(undefinedValue, "error");
+
+    expect(fromValue._tag).toBe("ok");
+    if (Result.isOk(fromValue)) {
+      expect(fromValue.value).toBe(1);
+    }
+    expect(fromNull._tag).toBe("err");
+    if (Result.isErr(fromNull)) {
+      expect(fromNull.error).toBe("error");
+    }
+    expect(fromUndefined._tag).toBe("err");
+    if (Result.isErr(fromUndefined)) {
+      expect(fromUndefined.error).toBe("error");
+    }
+  });
+
+  test("fromNullableOptional() - data last", () => {
+    const value = 1;
+    const nullValue = null;
+    const undefinedValue = undefined;
+
+    const fromValue = Result.fromNullableOptional("error")(value);
+    const fromNull = Result.fromNullableOptional("error")<number | null>(nullValue);
+    const fromUndefined = Result.fromNullableOptional("error")<number | undefined>(undefinedValue);
+
+    expect(fromValue._tag).toBe("ok");
+    if (Result.isOk(fromValue)) {
+      expect(fromValue.value).toBe(1);
+    }
+    expect(fromNull._tag).toBe("err");
+    if (Result.isErr(fromNull)) {
+      expect(fromNull.error).toBe("error");
+    }
+    expect(fromUndefined._tag).toBe("err");
+    if (Result.isErr(fromUndefined)) {
+      expect(fromUndefined.error).toBe("error");
+    }
+  });
+
+  test("toOption()", () => {
+    const okValue = Result.ok<number, string>(1);
+    const errValue = Result.err<number, string>("error");
+
+    const okOption = Result.toOption(okValue);
+    const errOption = Result.toOption(errValue);
+
+    expect(okOption._tag).toBe("some");
+    if (Option.isSome(okOption)) {
+      expect(okOption.value).toBe(1);
+    }
+    expect(errOption._tag).toBe("none");
+  });
+
+  test("fromOption() - data first", () => {
+    const someValue = Option.some(1);
+    const noneValue = Option.none();
+
+    const someResult = Result.fromOption(someValue, "error");
+    const noneResult = Result.fromOption(noneValue, "error");
+
+    expect(someResult._tag).toBe("ok");
+    if (Result.isOk(someResult)) {
+      expect(someResult.value).toBe(1);
+    }
+    expect(noneResult._tag).toBe("err");
+    if (Result.isErr(noneResult)) {
+      expect(noneResult.error).toBe("error");
+    }
+  });
+
+  test("fromOption() - data last", () => {
+    const someValue = Option.some(1);
+    const noneValue = Option.none();
+
+    const someResult = Result.fromOption("error")(someValue);
+    const noneResult = Result.fromOption("error")(noneValue);
+
+    expect(someResult._tag).toBe("ok");
+    if (Result.isOk(someResult)) {
+      expect(someResult.value).toBe(1);
+    }
+    expect(noneResult._tag).toBe("err");
+    if (Result.isErr(noneResult)) {
+      expect(noneResult.error).toBe("error");
     }
   });
 });
