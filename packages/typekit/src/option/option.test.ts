@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { pipe } from "~/pipe";
+import { Result } from "~/result";
 
 import { Option } from ".";
 
@@ -274,5 +275,53 @@ describe("option", () => {
     }
     expect(fromNull._tag).toBe("none");
     expect(fromUndefined._tag).toBe("none");
+  });
+
+  test("toResult() - data first", () => {
+    const someValue = Option.some(1);
+    const noneValue = Option.none();
+
+    const someResult = Option.toResult(someValue, "error");
+    const noneResult = Option.toResult(noneValue, "error");
+
+    expect(someResult._tag).toBe("ok");
+    if (Result.isOk(someResult)) {
+      expect(someResult.value).toBe(1);
+    }
+    expect(noneResult._tag).toBe("err");
+    if (Result.isErr(noneResult)) {
+      expect(noneResult.error).toBe("error");
+    }
+  });
+
+  test("toResult() - data last", () => {
+    const someValue = Option.some(1);
+    const noneValue = Option.none();
+
+    const someResult = Option.toResult("error")(someValue);
+    const noneResult = Option.toResult("error")(noneValue);
+
+    expect(someResult._tag).toBe("ok");
+    if (Result.isOk(someResult)) {
+      expect(someResult.value).toBe(1);
+    }
+    expect(noneResult._tag).toBe("err");
+    if (Result.isErr(noneResult)) {
+      expect(noneResult.error).toBe("error");
+    }
+  });
+
+  test("fromResult()", () => {
+    const okValue = Result.ok<number, string>(1);
+    const errValue = Result.err<number, string>("error");
+
+    const okOption = Option.fromResult(okValue);
+    const errOption = Option.fromResult(errValue);
+
+    expect(okOption._tag).toBe("some");
+    if (Option.isSome(okOption)) {
+      expect(okOption.value).toBe(1);
+    }
+    expect(errOption._tag).toBe("none");
   });
 });

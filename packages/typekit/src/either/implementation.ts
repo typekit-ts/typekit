@@ -1,8 +1,8 @@
 import { dual } from "~/dual";
-import type { HKT } from "~/hkt";
-import { Pipe, pipeable } from "~/pipe";
-import { Tagged, tagged } from "~/tagged";
-import type { Monad2 } from "~/typeclass/implementation";
+import { HKT } from "~/hkt";
+import { Pipe } from "~/pipe";
+import { Tagged } from "~/tagged";
+import { TypeClass } from "~/typeclass";
 
 export interface Left<L> extends Tagged.Tagged<"left">, Pipe.Pipeable {
   left: L;
@@ -18,9 +18,9 @@ interface EitherHKT extends HKT.HKT2 {
   return: Either<HKT.Arg0<this>, HKT.Arg1<this>>;
 }
 
-const eitherMonad: Monad2<EitherHKT> = {
-  pureLeft: (left) => pipeable(tagged({ left }, "left")),
-  pureRight: (right) => pipeable(tagged({ right }, "right")),
+const eitherMonad: TypeClass.Monad2<EitherHKT> = {
+  pureLeft: (left) => Pipe.pipeable(Tagged.tagged({ left }, "left")),
+  pureRight: (right) => Pipe.pipeable(Tagged.tagged({ right }, "right")),
   mapLeft: (either, onLeft) => (either._tag === "left" ? eitherMonad.pureLeft(onLeft(either.left)) : either),
   mapRight: (either, onRight) => (either._tag === "left" ? either : eitherMonad.pureRight(onRight(either.right))),
   biMap: (result, func) =>
